@@ -784,7 +784,8 @@ mbtn('btn-gas','gas'); mbtn('btn-brake','brake');
 // ── HANDLEBAR JOYSTICK ────────────────────────────────────────
 const hb=document.getElementById('handlebar');
 const hbKnob=document.getElementById('handlebar-knob');
-const HB_RADIUS=55; // pixels dead zone
+const HB_RADIUS=70;    // larger = more physical range before max steer
+const HB_DEAD=10;      // pixel dead zone at centre — no accidental steer
 
 function getHBPos(e){
   const rect=hb.getBoundingClientRect();
@@ -794,10 +795,13 @@ function getHBPos(e){
 }
 function updateHBKnob(dx,dy){
   const dist=Math.sqrt(dx*dx+dy*dy);
-  const maxR=HB_RADIUS;
-  const clamp=dist>maxR?maxR/dist:1;
+  const clamp=dist>HB_RADIUS?HB_RADIUS/dist:1;
   hbKnob.style.transform=`translate(calc(-50% + ${dx*clamp}px), calc(-50% + ${dy*clamp}px))`;
-  state.steer=Math.max(-1,Math.min(1,dx/maxR));
+  // dead zone in centre
+  const rawSteer=dx/HB_RADIUS;
+  const sign=rawSteer<0?-1:1;
+  const abs=Math.abs(rawSteer);
+  state.steer = abs < (HB_DEAD/HB_RADIUS) ? 0 : sign*Math.min(1,(abs-(HB_DEAD/HB_RADIUS))/(1-(HB_DEAD/HB_RADIUS)));
 }
 
 hb.addEventListener('touchstart',e=>{e.preventDefault();state.hbActive=true;const p=getHBPos(e);updateHBKnob(p.dx,p.dy);},{passive:false});
@@ -817,9 +821,10 @@ function updateBike(dt){
   else           state.bikeSpeed=Math.max(0,state.bikeSpeed-4*dt);
   if(keys.brake) state.bikeSpeed=Math.max(0,state.bikeSpeed-15*dt);
 
-  // Steering — more responsive at speed
-  const steerPower=0.5+state.bikeSpeed/MAX_SPEED*0.8;
-  state.bikeAngle+=state.steer*steerPower*dt*1.2;
+  // Steering — gentle, auto-straighten when released
+  const steerPower=0.3+state.bikeSpeed/MAX_SPEED*0.5;
+  state.bikeAngle+=state.steer*steerPower*dt*0.9;
+  if(!state.hbActive) state.steer*=0.88;
 
   // Move forward
   const fwd=new THREE.Vector3(Math.sin(state.bikeAngle),0,Math.cos(state.bikeAngle));
@@ -834,7 +839,7 @@ function updateBike(dt){
   bikeGroup.position.copy(state.bikePos);
   bikeGroup.rotation.y=state.bikeAngle;
   // Lean into turns
-  bikeGroup.rotation.z=-state.steer*0.18*(state.bikeSpeed/MAX_SPEED);
+  bikeGroup.rotation.z=-state.steer*0.11*(state.bikeSpeed/MAX_SPEED);
 
   // Wheel spin
   const spinRate=state.bikeSpeed*dt*3;
