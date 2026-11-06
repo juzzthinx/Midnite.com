@@ -1948,6 +1948,30 @@ function updateHorrorAudio(dt){
     const e = G.nearestE; if(e && e.active && !e.dead) playLaugh(e.x, e.z, e.elder, hk);
   }
 }
+// long mournful howl; far=true gives a distant, reverb-soaked version
+function playHowl(x,z,big,far){
+  if(!A.ok) return; const s = spat(x,z,far ? 420 : 160); if(s.vol <= 0) return; const c = A.ctx, t = c.currentTime, dur = big ? 3.2 : 2.4, out = sfxOut(s.pan, (far ? .5 : .8)*Math.max(.25,s.vol), far ? 1.1 : .6);
+  const f0 = big ? 190 : 270, o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0*1.9, t + dur*.35); o.frequency.exponentialRampToValueAtTime(f0*1.55, t + dur*.7); o.frequency.exponentialRampToValueAtTime(f0*.8, t + dur);
+  const vib = c.createOscillator(); vib.frequency.value = 5.5; const vg = c.createGain(); vg.gain.value = f0*.03; vib.connect(vg); vg.connect(o.frequency);
+  const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = far ? 700 : 950; bp.Q.value = 3.5;
+  const g = envG(out, t, dur*.25, dur*.75, .5); o.connect(bp); bp.connect(g); o.start(t); o.stop(t + dur + .3); vib.start(t); vib.stop(t + dur + .3);
+  nburst(t, dur*.8, .06, out, 'bandpass', 1500, 900, 2);
+}
+function updateDread(dt){
+  if(!A.ok) return;
+  A.windDuck = Math.max(0, (A.windDuck || 0) - dt/3.5);
+  if(G.state !== 'play') { if(A.dreadG) A.dreadG.gain.setTargetAtTime(0, A.ctx.currentTime, .3); return; }
+  const c = A.ctx, hk = A.horrorK || 0;
+  if(!A.dreadG){   // sub-bass beating drone + faint high whine, fades in with proximity
+    const g = c.createGain(); g.gain.value = 0; g.connect(A.master);
+    [41, 43.1].forEach(f=>{ const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = f; o.connect(g); o.start(); });
+    const wh = c.createOscillator(); wh.type = 'sine'; wh.frequency.value = 6100; const wg = c.createGain(); wg.gain.value = .006; wh.connect(wg); wg.connect(g); wh.start();
+    A.dreadG = g;
+  }
+  A.dreadG.gain.setTargetAtTime(Math.pow(hk,1.6)*.22 + (A.windDuck||0)*.05, c.currentTime, .6);
+  A.howlT = (A.howlT === undefined ? rand(14,26) : A.howlT) - dt;
+  if(A.howlT <= 0){ A.howlT = rand(24,48); const a = Math.random()*TAU; playHowl(P.x + Math.cos(a)*150, P.z + Math.sin(a)*150, Math.random() < .35, true); }
+}
 function playShot(){
   if(!A.ok) return; const c = A.ctx, t = c.currentTime, out = sfxOut(0, .9, .55);
   nburst(t, .18, 1.0, out, 'bandpass', 3800, 700, .9);
@@ -2620,6 +2644,13 @@ function spawnLogic(dt){
   }
 }
 
+function vampRush(e){
+  e.mode = 'rush'; e.modeT = rand(6,9); A.windDuck = 1;
+  if(e.elder){ playHowl(e.x, e.z, true, false); }
+  else playScreech(e.x, e.z, false);
+  setTimeout(()=>playGrowl(e.x, e.z, e.elder), 250);
+  for(const o of enemies){ if(o === e || !o.active || o.dead || o.mode !== 'stalk') continue; if(Math.hypot(o.x - e.x, o.z - e.z) < (e.elder ? 80 : 55)) o.modeT = Math.min(o.modeT, rand(.3, e.elder ? 1.2 : 2.4)); }
+}
 function updateEnemy(e, dt){
   if(!e.active) return;
   if(e.dead){
@@ -2686,9 +2717,22 @@ function updateEnemy(e, dt){
   if(e.flinch > 0) spd *= .15;
   if(G.gust > .4) spd *= 1.12;
   if(!e.elder && e.lunge > .5 && !e.watched) spd *= 1.12;
-  if(!e.watched && dist < 24 && dist > 3) spd *= 1.1;      // sprint the last stretch when you're not looking
+  // stalk / rush: they circle at the edge of your light, retreat when stared at, then burst in together
+  if(e.mode === undefined){ e.mode = 'stalk'; e.modeT = rand(7,13); e.orbDir = Math.random() < .5 ? 1 : -1; e.orbR = rand(15,26); }
+  e.modeT -= dt;
+  if(!inZone && G.state === 'play'){
+    if(e.mode === 'stalk'){ if((e.modeT <= 0 && dist < 70) || (dist < 11 && !e.watched)) vampRush(e); }
+    else if(e.modeT <= 0 && dist > 14){ e.mode = 'stalk'; e.modeT = rand(6,12); e.orbDir *= -1; e.orbR = rand(15,26); }
+  }
+  if(e.mode === 'rush' && !e.watched && dist < 24 && dist > 3) spd *= 1.25; else if(e.mode === 'rush') spd *= 1.1;
   if(inZone) spd = 9;      // flee
   let mx = ux, mz = uz;
+  if(e.mode === 'stalk' && !inZone && dist < 65){
+    const tx = -uz*e.orbDir, tz = ux*e.orbDir;
+    if(e.watched && dist < 32 && !e.elder){ mx = -ux*.45 + tx*.8; mz = -uz*.45 + tz*.8; spd *= .45; }           // sidestep away while stared at
+    else if(dist > e.orbR + 3){ mx = ux*.6 + tx*.6; mz = uz*.6 + tz*.6; spd *= .75; }                             // close in at an angle
+    else { const inw = dist > e.orbR ? .15 : -.12; mx = tx + ux*inw; mz = tz + uz*inw; spd *= .55; }              // circle the player
+  }
   if(dist > 6 && !inZone){ const wv = Math.sin(e.spawnT*2.2 + e.phase) * .55; mx += -uz*wv; mz += ux*wv; }
   mx += steerX; mz += steerZ;
   const ml = Math.hypot(mx,mz) || 1; mx /= ml; mz /= ml;
@@ -2852,9 +2896,9 @@ function updateWeather(dt){
   wv.set(-2.0 - g*13, 0, -.8 - g*4.5);
   if(A.windG){
     const t = A.ctx.currentTime;
-    A.windG.gain.setTargetAtTime(.14 + g*.34 + (1-dn)*.02, t, .5);
+    const dm = clamp(1 - (A.windDuck||0)*.85 - (A.horrorK||0)*.3, .1, 1); A.windG.gain.setTargetAtTime((.14 + g*.34 + (1-dn)*.02)*dm, t, .35);
     A.windF.frequency.setTargetAtTime(320 + g*420, t, .6);
-    A.hissG.gain.setTargetAtTime(.03 + g*.12, t, .6);
+    A.hissG.gain.setTargetAtTime((.03 + g*.12)*dm, t, .4);
     A.drone.gain.setTargetAtTime(.045*(1-dn*.8), t, 2);
     A.humG.gain.setTargetAtTime(.003 + g*.018, t, .8); A.whistleG.gain.setTargetAtTime(.004 + g*.07, t, .7);
   }
@@ -3062,8 +3106,8 @@ function update(dt){
 
   // heartbeat when something is close
   G.beatT -= dt;
-  if(G.nearest < 26 && G.beatT <= 0){ const k = 1 - G.nearest/26; G.beatT = lerp(1.1, .45, k); playBeat(.4 + k*.8); }
-  updateHorrorAudio(dt);
+  if(G.nearest < 40 && G.beatT <= 0){ const k = 1 - G.nearest/40; G.beatT = lerp(1.2, .4, k); playBeat(.35 + k*1.0); }
+  updateHorrorAudio(dt); updateDread(dt);
 
   // bats
   for(const b of bats){
