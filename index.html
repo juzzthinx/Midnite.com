@@ -297,7 +297,7 @@ function fbm(x,y,o){
 /* =========================================================
    WORLD HEIGHT FIELD
    ========================================================= */
-const WORLD_R = 600;               // playable radius
+const WORLD_R = 1100;               // playable radius
 function rawH(x,z){
   let h = (fbm(x*0.0032+11.3, z*0.0032-4.7, 4) - .5) * 46;
   const u = -x*.93 - z*.37, v = x*.37 - z*.93;                      // u runs with the wind, v across it
@@ -311,7 +311,7 @@ function hAt(x,z){
   let h = rawH(x,z) - RH0;
   const d = Math.sqrt(x*x + z*z);
   h *= 1 - .93 * (1 - smooth(45,140,d));      // flat plateau for the station
-  h += smooth(560,760,d) * 70;                  // ice-sheet rim
+  h += smooth(1060,1360,d) * 90;                  // ice-sheet rim
   return h;
 }
 
@@ -336,15 +336,15 @@ const ENVS = {
   dusk:{ name:'DAY 107 · LAST LIGHT', sub:'The sun is already gone. Kohler Station waits in the violet. Light the three beacons.',
     zen:[.020,.030,.090], mid:[.130,.080,.240], hz:[.600,.250,.220], star:.35, aur:.45, moon:.55, glow:.85, sunK:0, sun:[-.78,-.03,.62],
     fog:[.20,.12,.17], fogD:.0050, gust:.65, gustCol:[.30,.22,.28], dawnFog:1,
-    hemiS:[.50,.38,.66], hemiG:[.12,.08,.14], hemiI:1.0, lightC:[1,.52,.36], lightI:1.0, lightDir:[-.78,.16,.62], exp:1.12, tint:[2.6,1.5,1.9], lamp:.7 },
+    hemiS:[.50,.38,.66], hemiG:[.12,.08,.14], hemiI:.8, lightC:[1,.5,.34], lightI:.85, lightDir:[-.78,.12,.62], exp:1.02, tint:[2.6,1.5,1.9], lamp:.7 },
   morning:{ name:'DAY 108 · GREY MORNING', sub:'Pale light, no warmth. The dead are still out here. Light the three beacons.',
     zen:[.160,.280,.500], mid:[.340,.480,.680], hz:[.780,.800,.840], star:0, aur:0, moon:0, glow:.35, sunK:.7, sun:[.62,.13,-.77],
     fog:[.60,.66,.74], fogD:.0042, gust:.45, gustCol:[.72,.76,.82], dawnFog:.45,
     hemiS:[.72,.80,.92], hemiG:[.34,.38,.44], hemiI:1.05, lightC:[1,.92,.78], lightI:1.35, lightDir:[.62,.30,-.77], exp:.95, tint:[3.6,3.9,4.2], lamp:.04 },
   night:{ name:'DAY 107 · POLAR NIGHT', sub:'Kohler Station is silent. Light the three beacons.',
     zen:[.0010,.0035,.012], mid:[.006,.020,.050], hz:[.022,.064,.098], star:1, aur:1, moon:.75, glow:0, sunK:0, sun:[.55,-.07,-.83],
-    fog:[.022,.060,.092], fogD:.0068, gust:1, gustCol:[.10,.17,.22], dawnFog:1,
-    hemiS:[.26,.42,.72], hemiG:[.035,.06,.10], hemiI:.82, lightC:[.62,.72,1], lightI:.8, lightDir:[-.72,.42,-.55], exp:1.12, tint:[1,1,1], lamp:.8 }
+    fog:[.016,.045,.075], fogD:.0078, gust:1, gustCol:[.10,.17,.22], dawnFog:1,
+    hemiS:[.22,.36,.62], hemiG:[.025,.045,.08], hemiI:.6, lightC:[.55,.66,1], lightI:.62, lightDir:[-.8,.27,-.5], exp:1.0, tint:[1,1,1], lamp:.8 }
 };
 let ENV_KEY = 'night';
 try{ const sv = localStorage.getItem('wo_env'); if(sv && ENVS[sv]) ENV_KEY = sv; }catch(err){}
@@ -508,15 +508,15 @@ function makeRange(radius, hmin, hmax, seed, tint){
   m.renderOrder = -9; m.frustumCulled = false;
   return m;
 }
-const rangeFar = makeRange(2250, 260, 820, 3.7, [0.05,0.075,0.11]);
-const rangeNear = makeRange(1750, 120, 470, 9.1, [0.07,0.10,0.15]);
+const rangeFar = makeRange(3000, 300, 900, 3.7, [0.05,0.075,0.11]);
+const rangeNear = makeRange(2400, 150, 520, 9.1, [0.07,0.10,0.15]);
 scene.add(rangeFar, rangeNear);
 
 /* =========================================================
    TERRAIN
    ========================================================= */
 const terrain = (function(){
-  const SIZE = 1500, SEG = 300;
+  const SIZE = 2800, SEG = 400;
   const g = new THREE.PlaneGeometry(SIZE, SIZE, SEG, SEG);
   g.rotateX(-Math.PI/2);
   const p = g.attributes.position;
@@ -1002,11 +1002,11 @@ const driftGeo = (function(){
     blobGeo(2,1.3,.62,.72,.95,[.20,.22,.27]), blobGeo(2,4.1,.50,.62,.90,[.26,.22,.19]),
     blobGeo(2,7.7,.70,.85,.95,[.17,.19,.23]), blobGeo(2,2.9,.55,.55,.90,[.23,.24,.26])
   ];
-  const per = 40;
+  const per = 70;
   rockGeos.forEach(geo=>{
     const im = new THREE.InstancedMesh(geo, rockMat, per);
     for(let i=0;i<per;i++){
-      let x,z; do{ const a = Math.random()*TAU, d = 60+Math.random()*540; x = Math.cos(a)*d; z = Math.sin(a)*d; }while(Math.hypot(x,z)<70 || nearPost(x,z));
+      let x,z; do{ const a = Math.random()*TAU, d = 60+Math.random()*1040; x = Math.cos(a)*d; z = Math.sin(a)*d; }while(Math.hypot(x,z)<70 || nearPost(x,z));
       const s = .8+Math.pow(Math.random(),2.2)*4.6;
       o.position.set(x,hAt(x,z)+s*.05,z); o.rotation.set((Math.random()-.5)*.25, Math.random()*TAU, (Math.random()-.5)*.25);
       o.scale.set(s*(.9+Math.random()*.7), s*(.7+Math.random()*.5), s*(.9+Math.random()*.7)); o.updateMatrix(); im.setMatrixAt(i,o.matrix);
@@ -1030,7 +1030,7 @@ const driftGeo = (function(){
   const sPts = [];
   for(let i=0;i<40;i++){ const a=Math.random()*TAU, d=Math.random()*62; sPts.push({x:POI.spires.x+Math.cos(a)*d, z:POI.spires.z+Math.sin(a)*d, h:5+Math.random()*10}); }
   for(const c of crev) for(let k=0;k<6;k++){ const a=Math.random()*TAU, d=4+Math.random()*c.len*.5; sPts.push({x:c.x+Math.cos(a)*d, z:c.z+Math.sin(a)*d, h:2+Math.random()*6}); }
-  for(let i=0;i<50;i++){ let x,z; do{ const a=Math.random()*TAU, d=90+Math.random()*500; x=Math.cos(a)*d; z=Math.sin(a)*d; }while(!clearOf(x,z,30) || nearPost(x,z)); sPts.push({x,z,h:2+Math.random()*6}); }
+  for(let i=0;i<90;i++){ let x,z; do{ const a=Math.random()*TAU, d=90+Math.random()*980; x=Math.cos(a)*d; z=Math.sin(a)*d; }while(!clearOf(x,z,30) || nearPost(x,z)); sPts.push({x,z,h:2+Math.random()*6}); }
   const iceMat = new THREE.MeshPhongMaterial({vertexColors:true, emissive:0x08243a, shininess:90, specular:0xffffff, transparent:true, opacity:.9});
   const sGeos = [0,1,2,3].map(k=>seracGeo(k*3.7+1.3)), buckets = [[],[],[],[]];
   sPts.forEach((pt,i)=>buckets[i%4].push(pt));
@@ -1051,7 +1051,7 @@ const driftGeo = (function(){
   beacons.forEach(b=>{ for(let i=0;i<6;i++){ const a=Math.random()*TAU, r=5+Math.random()*10; addMound(b.x+Math.cos(a)*r, b.z+Math.sin(a)*r, 3+Math.random()*6, 1.2+Math.random()*2, .3+Math.random()*.6); } });
   [POI.wreck, POI.camp].forEach(pp=>{ for(let i=0;i<8;i++){ const a=Math.random()*TAU, r=4+Math.random()*14; addMound(pp.x+Math.cos(a)*r, pp.z+Math.sin(a)*r, 3+Math.random()*8, 1.4+Math.random()*2.4, .35+Math.random()*.8); } });
   rockSites.forEach(r=>{ addMound(r.x - .93*r.s*1.9, r.z - .37*r.s*1.9, r.s*(2.2+Math.random()), r.s*(.7+Math.random()*.3), r.s*.28, .18); });
-  for(let i=0;i<260;i++){ const a=Math.random()*TAU, d=20+Math.random()*540; addMound(Math.cos(a)*d, Math.sin(a)*d, 6+Math.random()*16, 2+Math.random()*4, .3+Math.random()*.6, .25); }
+  for(let i=0;i<480;i++){ const a=Math.random()*TAU, d=20+Math.random()*1040; addMound(Math.cos(a)*d, Math.sin(a)*d, 6+Math.random()*16, 2+Math.random()*4, .3+Math.random()*.6, .25); }
   const dm = new THREE.InstancedMesh(driftGeo, new THREE.MeshPhongMaterial({color:0xdde8f1, shininess:30, specular:0x39546e}), mounds.length);
   mounds.forEach((m,i)=>{ o.position.set(m.x, hAt(m.x,m.z) - m.h*.12, m.z); o.rotation.set(0,m.yaw,0); o.scale.set(m.len,m.h,m.wid); o.updateMatrix(); dm.setMatrixAt(i,o.matrix); });
   worldGroup.add(dm);
@@ -1376,7 +1376,7 @@ function buildVampireGeos(elder){
     {g:GB(.07,.12,.02), p:[0,1.65,.102], r:[.12,0,0], c:skin2},                                                 // open collar: chest skin
     {g:GB(.065,.4,.016), p:[.085,1.5,.122], r:[0,0,-.12], c:coat2}, {g:GB(.065,.4,.016), p:[-.085,1.5,.122], r:[0,0,.12], c:coat2},   // lapels
     SPH([0,1.68,-.11],.15,[1.35,.85,.9],coatC),                                  // trapezius / hunched upper back
-    SPH([.25,1.69,-.01],.082,[1,.85,1],coatC), SPH([-.25,1.69,-.01],.082,[1,.85,1],coatC),   // deltoid caps
+    SPH([.235,1.675,-.01],.062,[1.05,.7,1],coatC), SPH([-.235,1.675,-.01],.062,[1.05,.7,1],coatC),   // deltoid caps
     {g:LOFT([[1.7,.066,.066,0,-.04],[1.8,.058,.06,0,-.01],[1.9,.052,.055,0,.04],[1.985,.05,.054,0,.088]], 16, (y,x,z)=>{ const c = new THREE.Color(skin2); const run = smooth(.4,.7,vnoise(x*110+3,5.2))*(1-smooth(1.7,1.9,y))*smooth(.012,.04,x+.02);
         const wnd = Math.exp(-(((x-.04)**2)+((y-1.83)**2))/(2*.011*.011));
         c.multiplyScalar(.95+(vnoise(x*200,y*200)-.5)*.1); c.lerp(new THREE.Color(0x4a3a56), smooth(.88,.99,1-Math.abs(2*vnoise(x*60,y*60+z*50)-1))*.5);
@@ -1396,7 +1396,7 @@ function buildVampireGeos(elder){
     // teeth: upper row + long fangs
     {g:GB(.0085,.017,.006), p:[.0095,-.1075,.1285], c:tooth}, {g:GB(.0085,.017,.006), p:[-.0095,-.1075,.1285], c:tooth},
     {g:GB(.0085,.016,.006), p:[.0285,-.1065,.1275], c:tooth}, {g:GB(.0085,.016,.006), p:[-.0285,-.1065,.1275], c:tooth},
-    {g:GK(.0078,elder?.072:.062,4), p:[.0205,-.1,.1295], r:[Math.PI,0,0], c:tooth}, {g:GK(.0078,elder?.072:.062,4), p:[-.0205,-.1,.1295], r:[Math.PI,0,0], c:tooth},
+    {g:GK(.0078,elder?.085:.074,4), p:[.0205,-.1,.1295], r:[Math.PI,0,0], c:tooth}, {g:GK(.0078,elder?.085:.074,4), p:[-.0205,-.1,.1295], r:[Math.PI,0,0], c:tooth},
     // lower teeth hint
     {g:GB(.03,.007,.005), p:[0,-.126,.121], c:0xcfc8bc},
     // ears (slightly pointed)
@@ -1406,19 +1406,32 @@ function buildVampireGeos(elder){
     {g:GB(.02,.07,.03), p:[.125,-.04,.03], c:hair}, {g:GB(.02,.07,.03), p:[-.125,-.04,.03], c:hair},
     {g:GS(.177,10,8), p:[0,.055,-.05], s:[.97,.98,1.04], c:hair}
   ];
-  // curls: ring on crown, falling past the ears, a few over the forehead
-  const nC = elder ? 22 : 16;
-  for(let i=0;i<nC;i++){
-    const a = i/nC*TAU + rnd()*.3, el = .25 + rnd()*.9, r = .17 + rnd()*.025;
-    headParts.push({g:GS(.05+rnd()*.025,6,5), p:[Math.sin(a)*Math.cos(el)*r, .03 + Math.sin(el)*r*1.05, Math.cos(a)*Math.cos(el)*r*.95 - .035], c:hair});
+  // slicked-back gothic hair: swept locks from the hairline over the crown, falling past the nape, a few loose curls at the tips
+  const nL = elder ? 22 : 16;
+  for(let i=0;i<nL;i++){
+    const f = (i+.5)/nL, sx = (f - .5)*2, ax = Math.abs(sx);
+    const top = [sx*.115, .15 - ax*.03 + rnd()*.01, .105 - ax*.05], mid = [sx*.16, .07 - ax*.04, -.07 - ax*.02], tip = [sx*(.13 + rnd()*.03), (elder ? -.2 : -.15) - rnd()*.07 - (1-ax)*.02, -.15 - rnd()*.05];
+    headParts.push(LB(top, mid, .03, .026, hair, 5), LB(mid, tip, .026, .007, hair, 5));
+    if(rnd() < .45) headParts.push(SPH([tip[0]*1.04, tip[1]-.004, tip[2]-.008], .018 + rnd()*.01, [1,1.2,1], hair));
   }
-  for(let i=0;i<5;i++) headParts.push({g:GS(.04+rnd()*.02,6,5), p:[(i-2)*.055, .13+rnd()*.02, .12+rnd()*.025], c:hair});
-  for(let i=0;i<(elder?7:4);i++){ const sx = i%2 ? 1 : -1; headParts.push({g:GS(.045+rnd()*.015,6,5), p:[sx*(.15+rnd()*.03), -.05-rnd()*.1-(elder?i*.02:0), -.05+rnd()*.07], c:hair}); }
+  // widow's peak fringe + two long face-framing strands
+  headParts.push(LB([.02,.16,.1],[.075,.105,.15],.022,.008,hair,5), LB([-.02,.16,.1],[-.075,.105,.15],.022,.008,hair,5), LB([.0,.17,.09],[0,.13,.15],.02,.007,hair,5));
+  [-1,1].forEach(sx=>{ headParts.push(LB([sx*.12,.1,.09],[sx*.145,-.04,.1],.012,.008,hair,5), LB([sx*.145,-.04,.1],[sx*.15,-.14,.085],.008,.003,hair,5)); });
+  // gaunt face: sunken eye sockets, cheek hollows, brow ridge, sharper nose, drawn bloody lips, longer ears
+  [-1,1].forEach(sx=>{
+    headParts.push({g:GS(.038,8,6), p:[sx*.052,.04,.112], s:[1.45,1,.55], c:0x1b1519},                       // eye socket shadow
+      {g:GS(.04,8,6), p:[sx*.085,-.03,.105], s:[1,1.4,.5], r:[0,0,-sx*.3], c:0x5f6468},                       // hollow cheek
+      {g:GB(.11,.016,.03), p:[sx*.06,.072,.137], r:[.15,0,sx*.12], c:skin2});                                    // heavy brow ridge
+  });
+  headParts.push({g:GK(.016,.075,4), p:[0,-.012,.145], r:[-.18,0,0], s:[1,1,.8], c:skin2},                      // sharp nose ridge
+    {g:GS(.012,5,4), p:[0,-.046,.158], s:[1.6,.8,1], c:skin2},
+    {g:GS(.016,6,4), p:[0,-.1,.125], s:[3,.35,.5], c:0x44262a},                                                   // thin dark lips
+    {g:GB(.012,.05,.004), p:[.02,-.13,.123], r:[0,0,.05], c:0x4d0a0e}, {g:GB(.008,.035,.004), p:[-.025,-.125,.123], c:0x4d0a0e});   // blood from the mouth
   const head = mergeParts(headParts);
   const eyes = mergeParts([{g:GS(.0185,8,6),p:[.052,.036,.1225],s:[1.35,.78,.72],c:0xffffff},{g:GS(.0185,8,6),p:[-.052,.036,.1225],s:[1.35,.78,.72],c:0xffffff}]);
   // arms: shoulder -> upper arm (elbow pivot) -> forearm + human hand
   const armU = mergeParts([
-    {g:LOFT([[0,.066,.068,0,0],[-.05,.076,.078,0,0],[-.14,.068,.074,0,.006],[-.26,.054,.056,0,.01],[-.38,.047,.048,0,.02]], 10, ()=>coatC), p:[0,0,0], vc:true, c:0xffffff},
+    {g:LOFT([[0,.05,.054,0,0],[-.05,.062,.066,0,0],[-.14,.058,.064,0,.006],[-.26,.05,.052,0,.01],[-.38,.044,.046,0,.02]], 10, ()=>coatC), p:[0,0,0], vc:true, c:0xffffff},
     SPH([0,-.38,.02],.048,null,coatC)
   ]);
   const handParts = [
@@ -1433,7 +1446,7 @@ function buildVampireGeos(elder){
     [[.5,.3,.22],[.33,.62,.18],[.22,.95,.14]].forEach(([fr,cv,rad],k)=>{
       cum = cv; const l = len*fr, dir = [0,-Math.cos(cum),Math.sin(cum)], nx = [pt[0]+fx*.08, pt[1]+dir[1]*l, pt[2]+dir[2]*l];
       handParts.push(LB(pt,nx,.0098-k*.0014,.0084-k*.0014,k>0 ? (k===2 ? 0x5e0d12 : 0x6d3f40) : skin2,6)); if(k<2) handParts.push(SPH(nx,.0084-k*.0013,null,skin2));
-      if(k===2) handParts.push(CL(nx,[dir[0],dir[1],dir[2]],elder?.05:.032,.0058,claw));
+      if(k===2) handParts.push(CL(nx,[dir[0],dir[1],dir[2]],elder?.075:.055,.0058,claw));
       pt = nx; });
   });
   handParts.push(LB([.034,-.33,.02],[.062,-.372,.044],.014,.012,skin2,6), LB([.062,-.372,.044],[.074,-.414,.07],.012,.0095,skin2,6), CL([.074,-.414,.07],[.12,-.55,.55],elder?.04:.028,.0056,claw));   // thumb
@@ -1460,15 +1473,14 @@ function buildVampireGeos(elder){
   for(let i=0;i<tails;i++){
     const a = i/tails*TAU, back = Math.abs(Math.sin(a/2)) > .86;
     const len = elder ? (back ? 1.35 : 1.11) : (back ? .86 : .66) - rnd()*.14;
-    const g = new THREE.PlaneGeometry(elder?.42:.32, len, 1, 1);
+    const g = new THREE.PlaneGeometry(elder?.42:.32, len, 1, 1); { const Pq = g.attributes.position; for(let k=0;k<Pq.count;k++) if(Pq.getY(k) < 0){ Pq.setX(k, Pq.getX(k)*(.28 + rnd()*.18)); Pq.setY(k, Pq.getY(k) - rnd()*.07); } }
     cp.push({g, p:[Math.cos(a)*.22, 1.29-len/2, Math.sin(a)*.2], r:[Math.sin(a)*.2, -a+Math.PI/2, Math.cos(a)*.2], c:0xffffff});
   }
-  if(elder){
-    cp.push({g:new THREE.CylinderGeometry(.12,.105,.15,12,1,true), p:[0,1.86,-.005], c:0xffffff});   // stand collar
-  }
+  cp.push({g:new THREE.CylinderGeometry(elder?.12:.115,elder?.105:.1,elder?.15:.12,12,1,true), p:[0,elder?1.86:1.84,-.012], c:0xffffff});   // high stand collar
   const coat = mergeParts(cp);
   return {torso, head, eyes, arm, armU, hand, thigh, shin, cavity, jaw, coat};
 }
+const VH = 1.16;   // vampires stand taller than a man: looming, menacing
 const VGEO = { thrall: buildVampireGeos(false), elder: buildVampireGeos(true) };
 
 const vShadowMat = new THREE.MeshBasicMaterial({map:canvasTex(64,64,(g,w,h)=>{ const gr = g.createRadialGradient(32,32,2,32,32,31); gr.addColorStop(0,'rgba(0,0,0,.55)'); gr.addColorStop(.6,'rgba(0,0,0,.25)'); gr.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0,0,w,h); }), transparent:true, depthWrite:false, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2});
@@ -1478,7 +1490,7 @@ function makeVampire(kind){
   const G = VGEO[kind];
   const skinMat = new THREE.MeshPhongMaterial({vertexColors:true, shininess:14, specular:0x334455, emissive:0x000000});
   const eyeMat = new THREE.MeshBasicMaterial({color:0xff2424});
-  const root = new THREE.Group(); root.visible = false; root.scale.setScalar(S);
+  const root = new THREE.Group(); root.visible = false; root.scale.set(S, S*VH, S);
   const HIP = 1.06, body = new THREE.Group(); body.position.y = HIP; root.add(body); const bi = new THREE.Group(); bi.position.y = -HIP; body.add(bi);
   bi.add(new THREE.Mesh(G.torso, skinMat));
   const headG = new THREE.Group(); headG.position.set(0,2.0,.1); headG.rotation.x = .1; bi.add(headG);
@@ -2000,6 +2012,21 @@ function playScreech(x,z,big){
   const lf = c.createOscillator(); lf.frequency.value = 38; const lg = c.createGain(); lg.gain.value = 90; lf.connect(lg); lg.connect(o.frequency);
   const g = envG(out, t, .03, dur, .5); o.connect(bp); bp.connect(g); o.start(t); o.stop(t + dur + .1); lf.start(t); lf.stop(t + dur + .1);
   nburst(t, dur*.7, .25, out, 'bandpass', 2800, 1200, 1.5);
+}
+// heavy vampire footfall: dull thump + crunch of snow, louder and deeper for elders
+function playVStep(x,z,big,watched){
+  if(!A.ok) return; const s = spat(x,z,60); if(s.vol <= 0) return; const t = A.ctx.currentTime, q = (watched ? .55 : 1)*s.vol, o = sfxOut(s.pan, q, .25);
+  tone(big?58:78,'sine',t,.22,.95,o,big?30:40); nburst(t,.16,.5,o,'lowpass',big?900:1300,260,.8); nburst(t+.012,.1,.28,o,'bandpass',2600,1100,1.1);
+  if(big) tone(120,'triangle',t,.12,.25,o,60);
+}
+// low rattling growl (amplitude-modulated saw through a lowpass) with a breathy rasp
+function playGrowl(x,z,big){
+  if(!A.ok) return; const s = spat(x,z,55); if(s.vol <= 0) return; const c = A.ctx, t = c.currentTime, dur = big ? 1.7 : 1.2, out = sfxOut(s.pan, s.vol*.95, .5);
+  const f0 = big ? 48 : 68, o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f0*1.3, t); o.frequency.linearRampToValueAtTime(f0, t + dur*.4); o.frequency.linearRampToValueAtTime(f0*.75, t + dur);
+  const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(260, t); lp.frequency.linearRampToValueAtTime(520, t + dur*.35); lp.frequency.linearRampToValueAtTime(220, t + dur); lp.Q.value = 5;
+  const am = c.createOscillator(); am.frequency.value = big ? 21 : 27; const ag = c.createGain(); ag.gain.value = .5; const base = c.createGain(); base.gain.value = .5; am.connect(ag); ag.connect(base.gain);
+  const g = envG(out, t, .18, dur, .75); o.connect(lp); lp.connect(base); base.connect(g); o.start(t); o.stop(t + dur + .3); am.start(t); am.stop(t + dur + .3);
+  nburst(t + .05, dur*.8, .16, out, 'bandpass', 420, 180, 1.6);
 }
 function playHiss(x,z){
   if(!A.ok) return; const t = A.ctx.currentTime, s = spat(x,z,70); if(s.vol <= 0) return;
@@ -2552,10 +2579,10 @@ function spawnEnemy(kind, x, z){
   const pool = kind === 'elder' ? elders : thralls;
   const e = pool.find(q=>!q.active); if(!e) return null;
   e.active = true; e.dead = false; e.ashed = false; e.deadT = 0; e.x = x; e.z = z; e.y = hAt(x,z);
-  e.maxhp = e.elder ? 200 : 78; e.hp = e.maxhp; e.speed = e.elder ? 5.6 : 7.4;
+  e.maxhp = e.elder ? 200 : 78; e.hp = e.maxhp; e.speed = e.elder ? 6.5 : 8.6;
   e.attackCd = 1; e.flinch = 0; e.stun = 0; e.atkAnim = 0; e.blinkCd = rand(4,8); e.shriekCd = rand(3,8); e.burn = 0; e.hitFlashT = 0;
   e.root.visible = true; e.root.position.set(x,e.y,z); e.root.rotation.set(0,0,0); e.body.rotation.set(0,0,0); e.body.position.set(0,1.06,0); e.legL.position.y = e.legR.position.y = 1.06;
-  e.root.scale.setScalar(e.elder ? 1.26 : 1);
+  { const sc = e.elder ? 1.26 : 1; e.root.scale.set(sc, sc*VH, sc); }
   e.yaw = Math.atan2(P.x - x, P.z - z); e.spawnT = 0;
   e.skinMat.emissive.setRGB(0,0,0);
   e.mState = 0; e.mT = 0; e.batCd = e.elder ? rand(8,14) : rand(16,30); e.body.visible = e.shadow.visible = true; setBatsVisible(e,false);
@@ -2599,7 +2626,7 @@ function updateEnemy(e, dt){
     e.deadT += dt;
     const t = e.deadT;
     if(e.ashed){
-      e.root.scale.y = Math.max(.02, (e.elder?1.26:1) * (1 - t*1.6));
+      e.root.scale.y = Math.max(.02, (e.elder?1.26:1) * VH * (1 - t*1.6));
       if(t > .7){ e.active = false; e.root.visible = false; }
     } else {
       const df = Math.min(1,t*3.2), hy = 1.06 - df*.93; e.body.rotation.x = -df*1.5; e.body.position.y = hy; e.legL.position.y = e.legR.position.y = hy; e.legL.rotation.x = e.legR.rotation.x = -df*1.35; e.shinL.rotation.x = df*.2; e.shinR.rotation.x = df*.45;
@@ -2659,12 +2686,16 @@ function updateEnemy(e, dt){
   if(e.flinch > 0) spd *= .15;
   if(G.gust > .4) spd *= 1.12;
   if(!e.elder && e.lunge > .5 && !e.watched) spd *= 1.12;
+  if(!e.watched && dist < 24 && dist > 3) spd *= 1.1;      // sprint the last stretch when you're not looking
   if(inZone) spd = 9;      // flee
   let mx = ux, mz = uz;
   if(dist > 6 && !inZone){ const wv = Math.sin(e.spawnT*2.2 + e.phase) * .55; mx += -uz*wv; mz += ux*wv; }
   mx += steerX; mz += steerZ;
   const ml = Math.hypot(mx,mz) || 1; mx /= ml; mz /= ml;
-  if(dist > 2.0 || inZone){ e.x += mx*spd*dt; e.z += mz*spd*dt; e.gait += spd*dt*1.9; }
+  if(dist > 2.0 || inZone){ e.x += mx*spd*dt; e.z += mz*spd*dt; e.gait += spd*dt*1.9;
+    const sc = Math.floor(e.gait/Math.PI); if(e.stepN === undefined) e.stepN = sc; if(sc !== e.stepN){ e.stepN = sc; playVStep(e.x, e.z, e.elder, e.watched && dist > 9); } }
+  e.growlCd = (e.growlCd === undefined ? rand(1,4) : e.growlCd) - dt;
+  if(e.growlCd <= 0 && !inZone && dist < 50 && G.state === 'play'){ e.growlCd = (e.elder ? rand(4,8) : rand(3.5,7.5)) * (dist < 14 ? .6 : 1); playGrowl(e.x, e.z, e.elder); }
   const o = {x:e.x,z:e.z}; pushOut(o, .5); e.x = o.x; e.z = o.z;
   e.y = hAt(e.x,e.z);
   // shapeshift: dissolve into bats and re-form near the player
@@ -2698,7 +2729,7 @@ function updateEnemy(e, dt){
   e.shinL.rotation.x = bendL; e.shinR.rotation.x = bendR;
   if(e.elder){ e.legL.rotation.x *= .3; e.legR.rotation.x *= .3; }
   // spine: permanent hunch, deeper when moving, deepest in the lunge
-  const lean = (moving ? .3 : .16 + breath*.015) + (crouch ? .24 : 0) + (e.atkAnim > 0 ? .3 : 0) + LG*.5 - (e.elder ? .16 : 0);
+  const lean = (moving ? .36 : .24 + breath*.015) + (crouch ? .24 : 0) + (e.atkAnim > 0 ? .3 : 0) + LG*.5 - (e.elder ? .16 : 0);
   e.body.rotation.x = lean;
   e.body.rotation.z = moving ? Math.sin(e.gait)*.05*(1-LG*.4) : 0;
   e.body.position.y = 1.06 + (crouch ? -.22 : (moving ? Math.abs(Math.sin(e.gait))*.07 - LG*.22 : 0) + (e.elder ? .1 + Math.sin(t*1.4+e.phase)*.04 : 0));
@@ -3448,7 +3479,7 @@ function duckMaster(v, tc){ if(!A.ok) return; A.master.gain.setTargetAtTime(INTR
 function finishIntro(){
   const I = INTRO; if(!I.on) return; I.on = false; I.gun = 0;
   const e = I.vamp; if(e){ itSilhouette(e,false); e.active = false; e.dead = false; e.root.visible = false; e.eyeMat.color.setRGB(1,.05,.05); itJaw(e,0); e.root.rotation.set(0,0,0); e.body.rotation.set(0,0,0); }
-  if(I.swarm) I.swarm.forEach(b=>b.g.visible=false); if(e){ e.root.scale.set(1,1,1); } I.vamp = null; revealLight.intensity = 0; revealLight.color.setHex(0xff2a22); REV.flareK = 0; REV.letterT = 0;
+  if(I.swarm) I.swarm.forEach(b=>b.g.visible=false); if(e){ e.root.scale.set(1,VH,1); } I.vamp = null; revealLight.intensity = 0; revealLight.color.setHex(0xff2a22); REV.flareK = 0; REV.letterT = 0;
   itFade.style.display = 'none'; itTitle.style.display = 'none'; clearTitleDrips(); itSkip.style.display = 'none'; duckMaster(1, .2);
   fovCur = camera.fov; enterPlay();
 }
@@ -3513,7 +3544,7 @@ function introUpdate(dt){
       once('eyes', IT.eyes, ()=>{ if(A.ok){ const c = A.ctx, tt = c.currentTime, o = sfxOut(0,.5,.8); tone(1318,'sine',tt,1.6,.07,o); tone(659,'sine',tt,1.4,.06,o); nburst(tt,.5,.1,o,'highpass',3000,5000,1); } REV.fp.set(ex, hAt(ex,ez)+1.95, ez); });
       itRim(e, 2.1 + lu*.6); if(t > IT.eyes){ REV.flareK = .35*(1 - smooth(IT.jaw, IT.lunge - .2, t)); REV.flareDec = 0; REV.fp.set(ex, hAt(ex,ez)+1.95, ez); }
       const j = t < IT.jaw ? .04 : lerp(.04, 1, smooth(IT.jaw, IT.jaw + .5, t)); itJaw(e, j);
-      const dz = smooth(IT.jaw + .1, IT.lunge + .7, t); e.root.scale.set(1 - dz*.55, 1 - dz*.25, 1 - dz*.55); e.root.visible = dz < .98; e.shadow && (e.shadow.visible = dz < .6);
+      const dz = smooth(IT.jaw + .1, IT.lunge + .7, t); e.root.scale.set(1 - dz*.55, VH*(1 - dz*.25), 1 - dz*.55); e.root.visible = dz < .98; e.shadow && (e.shadow.visible = dz < .6);
       if(t > IT.jaw) itBatSwarm(e, t, cx, cy, cz);
     }
     once('lunge', IT.lunge, ()=>{ playSting(true); if(A.ok){ const c = A.ctx, tt = c.currentTime, o = sfxOut(0,.5,.5); const os = c.createOscillator(); os.type='sawtooth'; os.frequency.setValueAtTime(420,tt); os.frequency.exponentialRampToValueAtTime(1900,tt+.35); const bp = c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value = 1500; bp.Q.value = 2.5; const g = envG(o, tt, .03, .4, .55); os.connect(bp); bp.connect(g); os.start(tt); os.stop(tt+.5); } });
